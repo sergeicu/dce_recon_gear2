@@ -1,0 +1,54 @@
+{
+	"name": "dcerecon",
+	"label": "tbc",
+	"description": "tbc",
+	"maintainer": "Serge Vasylechko <serge.vasylechko@childrens.harvard.edu>",
+	"author": "tbc",
+	"url": "tbc",
+	"source": "TBC github link",
+	"license": "Other",
+	"custom": {
+		"flywheel": {
+			"suite": "dcerecon"
+		},
+		"gear-builder": {
+			"category": "converter",
+			"image": "dce_recon:latest"
+		}
+	},
+	"version": "0.1",
+	"inputs": {
+		"nifti-in": {
+			"base": "file",
+			"type": {
+				"enum": [
+					"NIFTI"
+				]
+			}
+		},
+		"dat-in": {
+			"base": "file",
+			"type": {
+				"enum": [
+					"RAW"
+				]
+			}
+		},
+		"csv-in": {
+			"base": "file",
+			"type": {
+				"enum": [
+					"CSV"
+				]
+			}
+		}
+	},
+	"config": {
+		"speed": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 3,
+			"description": "How fast do you want the gear to run? Choose 0-3."
+		}
+	}
+}

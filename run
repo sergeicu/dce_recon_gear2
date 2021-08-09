@@ -1,0 +1,88 @@
+#! /bin/bash
+#
+# Run DCE Recon Gear
+# Built to flywheel-v0 spec.
+#
+
+
+CONTAINER="[sergeicu/dce_recon_gear]"
+echo -e "$CONTAINER  Initiated"
+
+# Configure the ENV
+export MCRROOT=/opt/mcr/v96/
+export LD_LIBRARY_PATH=.:${MCRROOT}/runtime/glnxa64 ;
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/bin/glnxa64 ;
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/sys/os/glnxa64;
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/sys/opengl/lib/glnxa64;
+
+###############################################################################
+# Configure paths
+
+FLYWHEEL_BASE=/flywheel/v0
+OUTPUT_DIR=$FLYWHEEL_BASE/output
+INPUT_DIR=$FLYWHEEL_BASE/input
+CONFIG_FILE=$FLYWHEEL_BASE/config.json
+MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
+
+
+###############################################################################
+# Handle input files
+# PLEASE NOTE THAT THIS WOULD BE RE-WRITTEN FOR THE UPDATED GEAR (requires python pytorch library support - MAJOR REWRITE TBC LATER) 
+
+# note that these input file names are static inside the reconstruction script: 
+	#input_files/csv-in/subjectList_MRU.csv
+	#input_files/nifti-in/reconSCAN_T0.nii
+# the only input file name that changes is the raw data file. However, its path is specified inside .csv (with exact same relative path as below)
+	#input_files/dat-in/meas_MID1317_COR_RADIAL_VIBE_MULTIPHASE_FID427071.dat  - check the .csv file for more info 
+
+##############################################################################
+# Parse configuration
+
+function parse_config {
+  CONFIG_FILE=$FLYWHEEL_BASE/config.json
+  MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
+  if [[ -f $CONFIG_FILE ]]; then
+    echo -e "$(cat $CONFIG_FILE | jq -r '.config.'$1)"
+  else
+    CONFIG_FILE=$MANIFEST_FILE
+    echo -e "$(cat $MANIFEST_FILE | jq -r '.config.'$1'.default')"
+  fi
+}
+
+##############################################################################
+# Run DCE RECON
+
+echo -e "$CONTAINER  Starting dce_recon..."
+cd $FLYWHEEL_BASE
+#./run_reconstruct
+./reconstruct
+
+# Check status code and die
+if [[ $? != 0 ]]; then
+  echo -e "$CONTAINER  Problem encountered during dce_recon"
+  exit 1
+fi
+
+
+##############################################################################
+# Get a list of the files in the output directory
+
+outputs=$(find $OUTPUT_DIR/* -maxdepth 9 -type f )
+
+# TEMP COMMENT OUT
+# If outputs exist go home happy
+# if [[ -z $outputs ]]; then
+#   echo "$CONTAINER  FAILED: No results found in output directory... Exiting"
+#   exit 1
+# fi
+
+
+# Set permissions for outputs (prevent root only r/w)
+chmod -R 777 $OUTPUT_DIR
+
+# End
+echo -e "$CONTAINER  Wrote: `ls ${OUTPUT_DIR}`"
+echo -e "$CONTAINER  Done!"
+
+
+exit 0
